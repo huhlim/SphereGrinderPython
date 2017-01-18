@@ -15,7 +15,7 @@ def test():
     match_pdb(ref, pdb)
     #
     Rref = pdb_to_R(ref)
-    Rpdb = pdb_to_R(pdb, residue_s=ref.keys())
+    Rpdb = pdb_to_R(pdb, residue_s=list(ref.keys()))
     #
     for residue in ref:
         dist_s = cdist([ref[residue].R("CA")], Rref)
@@ -26,7 +26,7 @@ def test():
         n_atom = len(sphere)
         n_cut  = [len(np.where(dist < PARAM_CUTOFF)[0]) for PARAM_CUTOFF in PARAM_CUTOFF_s]
         sg = [n_cut[i]/float(n_atom) for i in range(len(PARAM_CUTOFF_s))]
-        print residue, '%6.4f  '%(np.mean(sg)), '%6.4f %6.4f'%tuple(sg)
+        print(residue, '%6.4f  '%(np.mean(sg)), '%6.4f %6.4f'%tuple(sg))
 
 def SphereGrinderSingle(pdb_fn, ref, Rref, residue_s):
     pdb = read_pdb(pdb_fn)

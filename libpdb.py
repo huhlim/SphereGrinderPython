@@ -105,7 +105,7 @@ def match_pdb(ref, pdb, pdb_fn):
 
 def pdb_to_R(pdb, residue_s=[]):
     if len(residue_s) == 0:
-        residue_s = pdb.keys()
+        residue_s = list(pdb.keys())
     R = []
     for residue in residue_s:
         R.append(pdb[residue].R())
