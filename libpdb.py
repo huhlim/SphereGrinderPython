@@ -86,22 +86,29 @@ def read_pdb(pdb_fn):
             #
             R = np.array([line[30:38], line[38:46], line[46:54]], dtype=float)
             pdb[key].put_ATOM(atmName, R)
-    for residue in pdb:
-        pdb[residue].sort()
+    for residue in sorted(pdb.keys()):
+        try:
+            pdb[residue].sort()
+        except:
+            sys.stderr.write("ERROR: there are weird ATOM names in the residue %s %s in the PDB file %s\n"%\
+                    (residue[0], residue[1], pdb_fn))
     return pdb
 
 def match_pdb(ref, pdb, pdb_fn):
+    status = True
     for residue in ref:
         if residue not in pdb:
             sys.stderr.write("ERROR: residue %s %s is not exists in the PDB file %s\n"%(residue[0], residue[1], pdb_fn))
-            return False
+            status = False
+            continue
         if not set(ref[residue].atmName()).issubset(set(pdb[residue].atmName())):
             sys.stderr.write("ERROR: residue %s %s is not same in the PDB file %s\n"%(residue[0], residue[1], pdb_fn))
-            return False
+            status = False
+            continue
         if ref[residue].atmName() == pdb[residue].atmName():
             continue
         pdb[residue].resort(ref[residue].atmName())
-    return True
+    return status
 
 def pdb_to_R(pdb, residue_s=[]):
     if len(residue_s) == 0:
