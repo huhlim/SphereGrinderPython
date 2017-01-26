@@ -9,8 +9,8 @@ from libsup import ls_rmsd
 PARAM_SPHERE_RADII=6.0
 PARAM_CUTOFF_s=[2.0, 4.0]
 
-def SphereGrinderSingle(pdb_fn, ref, Rref, residue_s):
-    pdb = read_pdb(pdb_fn)
+def SphereGrinderSingle(pdb_fn, ref, Rref, residue_s, ignore_chain=False):
+    pdb = read_pdb(pdb_fn, ignore_chain=ignore_chain)
     status = match_pdb(ref, pdb, pdb_fn)
     if not status:
         sg = {}
@@ -37,12 +37,12 @@ def SphereGrinderSingle(pdb_fn, ref, Rref, residue_s):
     sg_global /= float(len(residue_s))*len(PARAM_CUTOFF_s)/100.0
     return sg_global, sg
 
-def SphereGrinder(ref_fn, pdb_fn_s):
-    ref = read_pdb(ref_fn)
+def SphereGrinder(ref_fn, pdb_fn_s, ignore_chain=False):
+    ref = read_pdb(ref_fn, ignore_chain=ignore_chain)
     residue_s = sorted(ref.keys())
     Rref = pdb_to_R(ref, residue_s=residue_s)
     #
     score_s = []
     for pdb_fn in pdb_fn_s:
-        score_s.append(SphereGrinderSingle(pdb_fn, ref, Rref, residue_s))
+        score_s.append(SphereGrinderSingle(pdb_fn, ref, Rref, residue_s, ignore_chain=ignore_chain))
     return score_s, residue_s

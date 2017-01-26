@@ -12,12 +12,15 @@ def main():
             help='model protein structure', required=True, nargs='+')
     arg.add_argument('-f', '--full', dest='full', \
             help='print full log', default=False, action='store_true')
+    arg.add_argument('--ignore-chain', dest='ignore_chain',\
+            help='ignore chain IDs', default=False, action='store_true')
     #
     if len(sys.argv) == 1:
         return arg.print_help()
     arg = arg.parse_args()
     #
-    score_s, residue_s = SphereGrinder(arg.ref_fn, arg.pdb_fn_s)
+    score_s, residue_s =\
+            SphereGrinder(arg.ref_fn, arg.pdb_fn_s, ignore_chain=arg.ignore_chain)
     #
     sys.stdout.write("# reference: %s\n"%arg.ref_fn)
     sys.stdout.write("#\n")

@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+from string import digits
 
 GREEK_s = ['A','B','G','D','E','Z','H']
 BACKBONE_s = ['N','CA','C','O']
@@ -67,18 +68,23 @@ class Residue:
             self._R = np.array(self._R)
             return self._R
 
-def read_pdb(pdb_fn):
+def read_pdb(pdb_fn, ignore_chain=False):
     pdb = {}
     with open(pdb_fn) as fp:
         for line in fp:
             if not line.startswith("ATOM"):
                 continue
-            atmName = line[13:16].strip()
+            atmName = line[12:16].strip()
+            if len(atmName) == 4 and atmName[0] in digits:
+                atmName = '%s%s'%(atmName[1:], atmName[0])
             if atmName in OXT_s : continue
             if atmName[0] == 'H': continue
             #
             resNo = line[22:27]
-            chain = line[21].replace(" ",'_')
+            if ignore_chain:
+                chain = '_'
+            else:
+                chain = line[21].replace(" ",'_')
             #
             key = (resNo, chain)
             if key not in pdb:
@@ -96,7 +102,7 @@ def read_pdb(pdb_fn):
 
 def match_pdb(ref, pdb, pdb_fn):
     status = True
-    for residue in ref:
+    for residue in sorted(ref.keys()):
         if residue not in pdb:
             sys.stderr.write("ERROR: residue %s %s is not exists in the PDB file %s\n"%(residue[0], residue[1], pdb_fn))
             status = False
