@@ -68,13 +68,15 @@ class Residue:
             self._R = np.array(self._R)
             return self._R
 
-def read_pdb(pdb_fn, ignore_chain=False):
+def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
     pdb = {}
     with open(pdb_fn) as fp:
         for line in fp:
             if not line.startswith("ATOM"):
                 continue
             atmName = line[12:16].strip()
+            if use_calpha and atmName != 'CA':
+                continue
             if len(atmName) == 4 and atmName[0] in digits:
                 atmName = '%s%s'%(atmName[1:], atmName[0])
             if atmName in OXT_s : continue
