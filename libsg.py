@@ -13,28 +13,37 @@ def SphereGrinderSingle(pdb_fn, ref, Rref, residue_s,\
         ignore_chain=False, use_calpha=False):
     pdb = read_pdb(pdb_fn, ignore_chain=ignore_chain, use_calpha=use_calpha)
     status = match_pdb(ref, pdb, pdb_fn)
-    if not status:
-        sg = {}
-        for residue in residue_s:
-            sg[residue] = 0.0
-        sg_global = 0.0
-        return sg_global, sg
-    #
-    Rpdb = pdb_to_R(pdb, residue_s=residue_s)
     #
     sg = {}
     sg_global = 0.0
-    for residue in residue_s:
-        dist_s = cdist([ref[residue].R("CA")], Rref)
-        sphere = np.where(dist_s < PARAM_SPHERE_RADII)[1]
-        Sref = Rref[sphere]
-        Spdb = Rpdb[sphere]
-        #
-        rmsd = ls_rmsd(Spdb, Sref)
-        sg[residue] = rmsd
-        for cutoff in PARAM_CUTOFF_s:
-            if rmsd < cutoff:
-                sg_global += 1
+    #
+    Rpdb = pdb_to_R(pdb, residue_s=residue_s)
+    if status:
+        for residue in residue_s:
+            dist_s = cdist([ref[residue].R("CA")], Rref)
+            sphere = np.where(dist_s < PARAM_SPHERE_RADII)[1]
+            Sref = Rref[sphere]
+            Spdb = Rpdb[sphere]
+            #
+            rmsd = ls_rmsd(Spdb, Sref)
+            sg[residue] = rmsd
+            for cutoff in PARAM_CUTOFF_s:
+                if rmsd < cutoff:
+                    sg_global += 1
+    else:
+        Rref_common = pdb_to_R(ref, residue_s=residue_s, ref=pdb)
+        for residue in residue_s:
+            dist_s = cdist([ref[residue].R("CA")], Rref_common)
+            sphere = np.where(dist_s < PARAM_SPHERE_RADII)[1]
+            Sref = Rref_common[sphere]
+            Spdb = Rpdb[sphere]
+            #
+            rmsd = ls_rmsd(Spdb, Sref)
+            sg[residue] = rmsd
+            for cutoff in PARAM_CUTOFF_s:
+                if rmsd < cutoff:
+                    sg_global += 1
+    #
     sg_global /= float(len(residue_s))*len(PARAM_CUTOFF_s)/100.0
     return sg_global, sg
 

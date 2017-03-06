@@ -77,7 +77,8 @@ def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
             atmName = line[12:16].strip()
             if use_calpha and atmName != 'CA':
                 continue
-            if len(atmName) == 4 and atmName[0] in digits:
+            #if len(atmName) == 4 and atmName[0] in digits:
+            if atmName[0] in digits:
                 atmName = '%s%s'%(atmName[1:], atmName[0])
             if atmName in OXT_s : continue
             if atmName[0] == 'H': continue
@@ -110,7 +111,7 @@ def match_pdb(ref, pdb, pdb_fn):
             status = False
             continue
         if not set(ref[residue].atmName()).issubset(set(pdb[residue].atmName())):
-            sys.stderr.write("ERROR: residue %s %s is not same in the PDB file %s\n"%(residue[0], residue[1], pdb_fn))
+            sys.stderr.write("ERROR: residue %s %s is not same as in the PDB file %s\n"%(residue[0], residue[1], pdb_fn))
             status = False
             continue
         if ref[residue].atmName() == pdb[residue].atmName():
@@ -118,10 +119,20 @@ def match_pdb(ref, pdb, pdb_fn):
         pdb[residue].resort(ref[residue].atmName())
     return status
 
-def pdb_to_R(pdb, residue_s=[]):
+def pdb_to_R(pdb, residue_s=[], ref=None):
     if len(residue_s) == 0:
         residue_s = list(pdb.keys())
     R = []
-    for residue in residue_s:
-        R.append(pdb[residue].R())
+    if ref == None:
+        for residue in residue_s:
+            R.append(pdb[residue].R())
+    else:
+        for residue in residue_s:
+            if ref[residue].atmName() == pdb[residue].atmName():
+                R.append(pdb[residue].R())
+            else:
+                Rtmp = []
+                for atmName in ref[residue].atmName():
+                    Rtmp.append(pdb[residue].R(atmName))
+                R.append(np.array(Rtmp))
     return np.concatenate(R)
