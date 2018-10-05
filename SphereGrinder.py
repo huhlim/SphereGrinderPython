@@ -16,6 +16,8 @@ def main():
             help='use chain IDs', default=False, action='store_true')
     arg.add_argument('-ca', '--calpha', dest='use_calpha',\
             help='use C-alpha only', default=False, action='store_true')
+    arg.add_argument('--cutoff', dest='cutoff_s', nargs='+',\
+            help='Cutoffs for evaluations', default=[2.0, 4.0], type=float)
     #
     if len(sys.argv) == 1:
         return arg.print_help()
@@ -23,7 +25,8 @@ def main():
     #
     score_s, residue_s =\
             SphereGrinder(arg.ref_fn, arg.pdb_fn_s,\
-                          ignore_chain=(not arg.use_chain), use_calpha=arg.use_calpha)
+                          ignore_chain=(not arg.use_chain), use_calpha=arg.use_calpha,\
+                          cutoff_s=arg.cutoff_s)
     #
     sys.stdout.write("# reference: %s\n"%arg.ref_fn)
     sys.stdout.write("#\n")

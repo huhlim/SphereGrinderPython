@@ -6,7 +6,7 @@ from string import digits
 
 GREEK_s = ['A','B','G','D','E','Z','H']
 BACKBONE_s = ['N','CA','C','O']
-OXT_s = ['OXT','O1','O2','OT1','OT2']
+OXT_s = ['OXT','O2','OT2']
 
 def ATOM_SORT_RULE(atm_1, atm_2):
     if atm_1[0] in BACKBONE_s:
@@ -74,6 +74,7 @@ def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
         for line in fp:
             if not line.startswith("ATOM"):
                 continue
+            resName = line[17:20]
             atmName = line[12:16].strip()
             if use_calpha and atmName != 'CA':
                 continue
@@ -82,6 +83,10 @@ def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
                 atmName = '%s%s'%(atmName[1:], atmName[0])
             if atmName in OXT_s : continue
             if atmName[0] == 'H': continue
+            if resName == 'ILE' and atmName == 'CD1':
+                atmName = 'CD'
+            if atmName in ["OT1", 'O1']:
+                atmName = 'O'
             #
             resNo = line[22:27]
             if ignore_chain:
