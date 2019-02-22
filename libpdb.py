@@ -31,10 +31,13 @@ def ATOM_SORT_RULE(atm_1, atm_2):
     return cmp(ia_1, ia_2)
 
 class Residue:
-    def __init__(self, resNo, chain):
+    def __init__(self, resName, resNo, chain):
+        self.resName = resName
         self.resNo = resNo
         self.chain = chain
         self.atom_s = []
+    def __len__(self):
+        return len(self.atom_s)
     def __repr__(self):
         return '%s %s %2d'%(self.resNo, self.chain, len(self.atom_s))
     def put_ATOM(self, atmName, R):
@@ -48,6 +51,8 @@ class Residue:
             atom_s.append(self.atom_s[atmName_curr.index(atmName)])
         self.atom_s = atom_s
         self._atmName = atmName_s
+    def set_index(self, init):
+        self.i_atm = init + np.arange(len(self))
     def atmName(self):
         if '_atmName' not in dir(self):
             self._atmName = []
@@ -67,6 +72,46 @@ class Residue:
                 self._R.append(atom[1])
             self._R = np.array(self._R)
             return self._R
+    @property
+    def swap(self):
+        return self.resName in ['ASP','GLU','PHE','TYR']
+    @property
+    def swappable(self):
+        atmName = self.atmName()
+        swap = np.zeros_like(atmName, dtype=int)
+        if self.resName == 'ASP':
+            swap[atmName.index("OD1")] = 1
+            swap[atmName.index("OD2")] = 2
+        elif self.resName == 'GLU':
+            swap[atmName.index("OE1")] = 1
+            swap[atmName.index("OE2")] = 2
+        elif self.resName == 'PHE' or self.resName == 'TYR':
+            swap[atmName.index("CD1")] = 1
+            swap[atmName.index("CD2")] = 2
+            swap[atmName.index("CE1")] = 1
+            swap[atmName.index("CE2")] = 2
+        return swap
+    @property
+    def swapindex(self):
+        index = np.arange(len(self))
+        try:
+            i = np.where(self.swappable == 1)
+            j = np.where(self.swappable == 2)
+            index[i] = j
+            index[j] = i
+        except:
+            pass
+        return self.i_atm[index]
+    def remove_atom(self, atmName):
+        atmName_s = self.atmName()
+        if atmName not in atmName_s:
+            return
+        i = atmName_s.index(atmName)
+        self._atmName.remove(atmName)
+        self.atom_s.remove(self.atom_s[i])
+        if '_R' in dir(self):
+            self._R = np.delete(self._R, i, axis=0)
+
 
 def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
     pdb = {}
@@ -96,7 +141,7 @@ def read_pdb(pdb_fn, ignore_chain=False, use_calpha=False):
             #
             key = (resNo, chain)
             if key not in pdb:
-                pdb[key] = Residue(resNo, chain)
+                pdb[key] = Residue(resName, resNo, chain)
             #
             R = np.array([line[30:38], line[38:46], line[46:54]], dtype=float)
             pdb[key].put_ATOM(atmName, R)
@@ -139,5 +184,9 @@ def pdb_to_R(pdb, residue_s=[], ref=None):
                 Rtmp = []
                 for atmName in ref[residue].atmName():
                     Rtmp.append(pdb[residue].R(atmName))
+                pdb_atmName = copy.deepcopy(pdb[residue].atmName())
+                for atmName in pdb_atmName:
+                    if atmName not in ref[residue].atmName():
+                        pdb[residue].remove_atom(atmName)
                 R.append(np.array(Rtmp))
     return np.concatenate(R)
